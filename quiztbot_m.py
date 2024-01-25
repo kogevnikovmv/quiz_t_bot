@@ -52,7 +52,7 @@ def new_question(message):
         numbers.remove(question_number)
         qdb=QuestionDB()
         #qdb.get на выходе получает список с кортежем внутри
-        question=qdb.get(question_number)
+        question=qdb.get_question(question_number)
         qdb.close()
         #распаковываем список в кортеж
         question=question[0]
