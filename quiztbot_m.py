@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-from token_bot import Token_for_bot
+from configuration import Token_for_bot
 from get_from_db import QuestionDB
 import random
 
@@ -18,6 +18,7 @@ def start(message):
     elif check_player(message)==False:
         db=QuestionDB()
         db.add_id_player(message.from_user.id)
+        db.close()
 
 
     markup.add(*buttons)
@@ -25,13 +26,20 @@ def start(message):
 
 
 @bot.message_handler(func=lambda message: message.text == "Новая игра" or message.text == 'Следующий вопрос' or message.text == 'Продолжить игру')
+
 def new_question(message):
-    #тут 2 ошибки:player.create нужно сделать как метод QuestionDB, и искать ид там же
-    #if id_player not in db_players:
-        #=QuestionDB.add_id_player(id)
-    #это для продолжить игру
-    #elif id in db_players:
-        #numbers=[1, 2]
+    #получение вопросов, которые еще в игре
+    if message.text=='Продолжить игру':
+    	db=QuestionDB()
+    	numbers=db.resume_game()
+    	db.close()
+    #получение списка с номерами вопросов
+    #не верно!!!!!!!!
+    elif message.text=='Новая игра':
+    	db=QuestionDB()
+    	numbers=list(range(1, db.get_number_of_questions()+1))
+    	db.close()
+    	
     if len(numbers)==0:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         buttons = []
@@ -44,7 +52,7 @@ def new_question(message):
         question_number=random.choice(numbers)
         numbers.remove(question_number)
         qdb=QuestionDB()
-        #adb.get на выходе получает список с кортежем внутри
+        #qdb.get на выходе получает список с кортежем внутри
         question=qdb.get(question_number)
         qdb.close()
         #распаковываем список в кортеж
@@ -103,21 +111,19 @@ def check_player(message):
     player_id = message.from_user.id
     db=QuestionDB()
     result=db.check_id(player_id)
+    db.close()
     if result==True:
         return True
     else:
         return False
+        
 
 id_player=None
-questions_in_game=None
+numbers=[]
 
-#временная бд игроков=)
-db_players=["5137175701"]
-#получение списка с номерами вопросов
 
-db=QuestionDB()
-numbers=list(range(1, db.get_number_of_questions()+1))
-db.close()
+
+
 
 
 bot.polling(none_stop=True, interval=0)
