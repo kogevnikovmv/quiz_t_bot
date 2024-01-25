@@ -39,6 +39,7 @@ class QuestionDB():
 			class Meta:
 				database=self.db
 				table_name='Players'
+			id=PrimaryKeyField()
 			player_id=IntegerField()
 			player_progress=TextField()
 		self.Question=Question
@@ -84,16 +85,10 @@ class QuestionDB():
 		cursor.execute(f'SELECT * FROM Questions WHERE id={num}')
 		result=cursor.fetchall()
 		return result
-		
-	#получение кол-ва вопросов
-	def get_number_of_questions(self):
-		return self.Question.select().count()
+
 
 	#добавление нового ид в бд
 	def add_id_player(self,num):
-		#не здесь должно быть это
-		numbers=list(range(1, self.get_number_of_questions()+1))
-		
 		new_player=self.Player.create(player_id=num, player_progress='')
 
 	#проверка игрока что он играл ранее
@@ -114,8 +109,19 @@ class QuestionDB():
 		cursor.execute('SELECT * FROM Players')
 		result=cursor.fetchall()
 		print(result)
-	
-	# возвращает номера вопросов в игре
+
+
+
+
+
+
+
+
+
+
+
+
+	# возвращает номера вопросов которые еще не сыгранны
 	def resume_game(self, player_id):
 		cursor=self.db.cursor()
 		cursor.execute(f'SELECT player_progress FROM Players WHERE player_id={player_id}')
@@ -125,6 +131,14 @@ class QuestionDB():
 	# удаляет сыгранный вопрос
 	def save_progress(self, player_id, progress):
 		print()
+
+
+	# получение списка номеров вопросов в бд
+	def new_game(self):
+		numbers = list(range(1, self.Question.select().count() + 1))
+		player=self.Player.get_by_id(1)
+		print(player)
+		return numbers
 
 	def get_player_fields(self):
 		print(self.Player._meta.fields)
@@ -140,5 +154,6 @@ with QuestionDB() as q:
 	#q.get_fields()
 	#q.add_id_player(1)
 	#q.check_id(1)
-	q.all_players()
-	q.get_player_fields()
+	#q.all_players()
+	#q.get_player_fields()
+	q.new_game()

@@ -29,16 +29,15 @@ def start(message):
 
 def new_question(message):
     #получение вопросов, которые еще в игре
-    if message.text=='Продолжить игру':
-    	db=QuestionDB()
-    	numbers=db.resume_game()
-    	db.close()
+    if message.text=='Продолжить игру' or 'Следующий вопрос':
+        db=QuestionDB()
+        numbers=db.resume_game(message.from_user.id)
+        db.close()
     #получение списка с номерами вопросов
-    #не верно!!!!!!!!
     elif message.text=='Новая игра':
-    	db=QuestionDB()
-    	numbers=list(range(1, db.get_number_of_questions()+1))
-    	db.close()
+        db=QuestionDB()
+
+        db.close()
     	
     if len(numbers)==0:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
