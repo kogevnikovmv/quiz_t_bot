@@ -28,18 +28,18 @@ def start(message):
 @bot.message_handler(func=lambda message: message.text == "Новая игра" or message.text == 'Следующий вопрос' or message.text == 'Продолжить игру')
 
 def new_question(message):
+    numbers=[]
     #получение вопросов, которые еще в игре
-    if message.text=='Продолжить игру' or 'Следующий вопрос':
+    if message.text=='Продолжить игру' or message.text=='Следующий вопрос':
         db=QuestionDB()
         numbers=db.resume_game(message.from_user.id)
         db.close()
-    #получение списка с номерами вопросов
     elif message.text=='Новая игра':
         db=QuestionDB()
-
+        numbers=db.new_game(message.from_user.id)
         db.close()
-    	
-    if len(numbers)==0:
+
+    if numbers==[]:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         buttons = []
         btn1 = types.KeyboardButton('Новая игра')
@@ -51,11 +51,12 @@ def new_question(message):
         question_number=random.choice(numbers)
         numbers.remove(question_number)
         qdb=QuestionDB()
+        #сохраняет изменения в списке вопросов, которые еще в игре
+        qdb.save_progress(message.from_user.id, numbers)
         #qdb.get на выходе получает список с кортежем внутри
         question=qdb.get_question(question_number)
         qdb.close()
         #распаковываем список в кортеж
-        question=question[0]
         question_id=question[0]
         question_text=question[1]
         right_answer=question[3]
@@ -117,8 +118,6 @@ def check_player(message):
         return False
         
 
-id_player=None
-numbers=[]
 
 
 

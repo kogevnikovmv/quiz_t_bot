@@ -12,7 +12,7 @@ class QuestionDB():
 		if platform.system()=='Linux':
 			self.db_path=Db_path.MOBILE_PATH
 		elif platform.system()=='Windows':
-			self.db_path=Db_path.TEST_WIN_PATH
+			self.db_path=Db_path.WIN_PATH
 		else:
 			print('система не определена')
 		
@@ -39,6 +39,7 @@ class QuestionDB():
 			class Meta:
 				database=self.db
 				table_name='Players'
+				
 			id=PrimaryKeyField(primary_key=True)
 			player_id=IntegerField()
 			player_progress=TextField()
@@ -71,10 +72,6 @@ class QuestionDB():
 		list_names=self.db.get_tables()
 		for name in list_names:
 			print('table: ', name)
-
-	#новый вопрос из бд
-	def get_new_question(self, num):
-		return self.Question.get_by_id(num)
 	
 	#получить имена столбцов
 	def get_fields(self):
@@ -91,34 +88,37 @@ class QuestionDB():
 		print(self.Player._meta.fields)
 
 	def add_id_test_player(self):
-		new_player = self.Player.create(player_id=555556, player_progress='im not player')
+		new_player = self.Player.create(player_id=2222, player_progress='[18]')
 		print('player add')
+
+	def edit_player(self, player_id):
+		player = self.Player.get(player_id=player_id)
+		player.player_progress='[18]'
+		player.save()
 
 
 	# ************Функции для работы бота***********
 
 	#запрос на получение записи по номеру ид
 	def get_question(self, num):
-		cursor=self.db.cursor()
-		cursor.execute(f'SELECT * FROM Questions WHERE id={num}')
-		result=cursor.fetchall()
+		row=self.Question.get(id=num)
+		result=[row.id, row.question, row.answers, row.right, row.picture, row.question_type]
 		return result
 
 
 	#добавление нового ид в бд
 	def add_id_player(self,num):
-		new_player=self.Player.create(player_id=num, player_progress='')
+		new_player=self.Player.create(player_id=num, player_progress='[18]')
 
 	#проверка игрока что он играл ранее
 	def check_id(self, player_id):
-		cursor=self.db.cursor()
-		cursor.execute(f'SELECT * FROM Players WHERE player_id={player_id}')
-		result=cursor.fetchall()
+		#cursor=self.db.cursor()
+		#cursor.execute(f'SELECT * FROM Players WHERE player_id={player_id}')
+		#result=cursor.fetchall()
+		result=self.Player.get_or_none(player_id=player_id)
 		if result:
-			print(result)
 			return True
 		else:
-			print('id не найден')
 			return False
 
 
@@ -127,20 +127,23 @@ class QuestionDB():
 
 	# возвращает номера вопросов которые еще не сыгранны
 	def resume_game(self, player_id):
-		cursor=self.db.cursor()
-		cursor.execute(f'SELECT player_progress FROM Players WHERE player_id={player_id}')
-		result=cursor.fetchall()
-		return json.loads(result)
+		player=self.Player.get(player_id=player_id)
+		result=player.player_progress
+		print('result', result)
+		if result:
+			return json.loads(result)
+		else:
+			print('пустой player_progress игрока')
 	
-	# удаляет сыгранный вопрос
+	# сохраняет в бд список вопросов после получения нового вопроса
 	def save_progress(self, player_id, progress):
 		player=self.Player.get(player_id=player_id)
-		progress=json.loads(progress)
+		progress=json.dumps(progress)
 		player.player_progress=f'{progress}'
 		player.save()
 
 
-	# получение списка номеров вопросов в бд
+	# получение списка номеров вопросов в бд для новой игры
 	def new_game(self, player_id):
 		numbers = list(range(1, self.Question.select().count() + 1))
 		self.save_progress(player_id, numbers)
@@ -148,18 +151,19 @@ class QuestionDB():
 
 
 
+
 #для проверки				
-with QuestionDB() as q:
-	#print(q.get_all())
-	#print(q.get_new_q(2))
+#with QuestionDB() as q:
+	#print(q.get_all_rows())
+	#print(q.get_question(2))
 	#print(q.get_number_of_questions())
 	#q.get_tables_names()
-	#print(*q.get(2))
 	#q.get_fields()
 	#q.add_id_player(1)
-	#q.check_id(1)
-
+	#print(q.check_id(5137175701))
 	#q.add_id_test_player()
-	q.all_players()
+	#q.all_players()
 	#q.get_player_fields()
-	q.new_game()
+	#q.new_game()
+	#print(q.resume_game(1111))
+
